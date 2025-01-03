@@ -50,12 +50,13 @@ def get_stats(ticker:str) -> np.array:
     recommendations = company.recommendations_summary
     recommendationMean = get_recommendationMean(recommendations) # Complete
 
-    retrunOnEquity = company.info.get('retrunOnEquity')
+    PEratio = company.info.get('trailingPE')
     heldPercentInstitutions = company.info.get('heldPercentInstitutions')
     targetMeanPrice = company.info.get('targetMeanPrice')
     currentPrice = company.info.get('currentPrice')
+    debtToEquity = company.info.get('debtToEquity')
 
-    block = np.array([ticker, recommendationMean, retrunOnEquity, heldPercentInstitutions, targetMeanPrice, currentPrice])
+    block = np.array([ticker, recommendationMean, PEratio, heldPercentInstitutions, targetMeanPrice, currentPrice, debtToEquity])
 
     return block
 
@@ -70,7 +71,9 @@ def buildDf(ticker_list:list[str]):
 
     blockList = np.vstack(blockList)
         
-    blockDf = pd.DataFrame(blockList, columns=['ticker', 'recommendationMean', 'returnOnEquity', 'heldPercentInstitutions', 'targetMeanPrice', 'currentPrice'])
+    blockDf = pd.DataFrame(blockList, columns=['ticker', 'recommendationMean', 'PEratio', 'heldPercentInstitutions', 'targetMeanPrice', 'currentPrice', 'debtToEquity'])
+
+    blockDf.iloc[:, 1:] = blockDf.iloc[:, 1:].map(pd.to_numeric)
 
     blockDf['targetMeanPrice'] = blockDf['targetMeanPrice'] - blockDf['currentPrice']
     blockDf.rename(columns={'targetMeanPrice':'target - current'}, inplace = True)
@@ -79,10 +82,6 @@ def buildDf(ticker_list:list[str]):
 
     return blockDf
 
-
-#TESTS
-test = buildDf(['AAPL','INTC'])
-print(test)
 
 
 

@@ -65,11 +65,7 @@ def ripen(ticker_list:list[str], start:str, end:str):
 
 
          
-ticker_list = ['INTC', 'AAPL']
-scores_dict = ripen(ticker_list, '2024-12-25', '2024-12-27')
 
-for ticker, score in scores_dict.items():
-    print(f"Final dictionary content: \n Ticker:{ticker}, Score:{score}") 
 
 
 
