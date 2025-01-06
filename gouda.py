@@ -1,6 +1,6 @@
 # Use a pipeline as a high-level helper
 import tensorflow as tf
-from transformers import AutoTokenizer, pipeline
+from transformers import AutoTokenizer, pipeline, TFAutoModelForSequenceClassification
 import pandas as pd
 import finnhub
 import ast
@@ -10,8 +10,7 @@ finnhub_client = finnhub.Client(api_key="ctn0dbpr01qjlgir4mpgctn0dbpr01qjlgir4mq
 # Model initialization (personalize) 
 tokenizer = AutoTokenizer.from_pretrained("fuchenru/Trading-Hero-LLM")
 pipe = pipeline("text-classification", model="fuchenru/Trading-Hero-LLM")
-
-
+model = TFAutoModelForSequenceClassification.from_pretrained("fuchenru/Trading-Hero-LLM")
 
 def get_news(ticker_list:list[str], start:str, end:str):
     '''
@@ -39,16 +38,23 @@ def get_ratings(ticker_news:dict):
         for index in range(len(news)):
             summary = news['summary'][index]
 
-            result = pipe(summary) #Pipe returns a list with the first index containing a dictionary in a string form
-            result = str(result[0])
+            inputs = tokenizer(summary, max_length=512, truncation=True, padding='max_length', return_tensors='tf')
+            result = model(**inputs)
+            result = tf.argmax(result.logits, axis=1).numpy().item()
+
+            print(result)
+
+            #Changing the numerical "Negative" representation to -1
+            if result == 2:
+                result = -1
+            
             print(f"Score obtained per summary: Summary: {summary} - Result: {result}")
-            result = ast.literal_eval(result)
 
             try:
-                ticker_rating_dict[ticker] += result['score'] 
+                ticker_rating_dict[ticker] += result
 
             except KeyError:
-                ticker_rating_dict[ticker] = result['score']
+                ticker_rating_dict[ticker] = result
             
         ticker_rating_dict[ticker] /= len(news)
     
